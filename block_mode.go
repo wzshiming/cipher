@@ -1,6 +1,8 @@
 package cipher
 
-import "crypto/cipher"
+import (
+	"crypto/cipher"
+)
 
 type BlockMode struct {
 	DeBlockMode cipher.BlockMode
@@ -15,6 +17,10 @@ func NewBlockMode(deBlockMode, enBlockMode cipher.BlockMode) Cipher {
 
 func (c *BlockMode) Encrypt(plaintext []byte) (ciphertext []byte, err error) {
 	length := len(plaintext)
+	blockSize := c.EnBlockMode.BlockSize()
+	if length%blockSize != 0 {
+		return nil, ErrNotFullBlock
+	}
 	ciphertext = make([]byte, length)
 	c.EnBlockMode.CryptBlocks(ciphertext[:], plaintext[:])
 	return
@@ -22,6 +28,10 @@ func (c *BlockMode) Encrypt(plaintext []byte) (ciphertext []byte, err error) {
 
 func (c *BlockMode) Decrypt(ciphertext []byte) (plaintext []byte, err error) {
 	length := len(ciphertext)
+	blockSize := c.DeBlockMode.BlockSize()
+	if length%blockSize != 0 {
+		return nil, ErrNotFullBlock
+	}
 	plaintext = make([]byte, length)
 	c.DeBlockMode.CryptBlocks(plaintext[:], ciphertext[:])
 	return

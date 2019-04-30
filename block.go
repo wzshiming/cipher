@@ -18,6 +18,9 @@ func NewBlock(block cipher.Block) Cipher {
 func (a *Block) Encrypt(plaintext []byte) (ciphertext []byte, err error) {
 	length := len(plaintext)
 	blockSize := a.Block.BlockSize()
+	if length%blockSize != 0 {
+		return nil, ErrNotFullBlock
+	}
 	ciphertext = make([]byte, length)
 	for i := 0; i < length; i += blockSize {
 		a.Block.Encrypt(ciphertext[i:], plaintext[i:])
@@ -29,6 +32,9 @@ func (a *Block) Encrypt(plaintext []byte) (ciphertext []byte, err error) {
 func (a *Block) Decrypt(ciphertext []byte) (plaintext []byte, err error) {
 	length := len(ciphertext)
 	blockSize := a.Block.BlockSize()
+	if length%blockSize != 0 {
+		return nil, ErrNotFullBlock
+	}
 	plaintext = make([]byte, length)
 	for i := 0; i < length; i += blockSize {
 		a.Block.Decrypt(plaintext[i:], ciphertext[i:])

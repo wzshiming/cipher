@@ -2,11 +2,6 @@ package cipher
 
 import (
 	"bytes"
-	"errors"
-)
-
-var (
-	ErrNotBlock = errors.New("cipher: data is not a multiple of the block size")
 )
 
 type PKCS7Padding int
@@ -18,7 +13,11 @@ func NewPKCS7Padding(i int) Cipher {
 var _ Cipher = (*PKCS7Padding)(nil)
 
 func (p PKCS7Padding) Encrypt(plaintext []byte) (ciphertext []byte, err error) {
-	padding := int(p) - len(plaintext)%int(p)
+	length := len(plaintext)
+	if length == 0 {
+		return nil, ErrNotFullBlock
+	}
+	padding := int(p) - length%int(p)
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	ciphertext = append(plaintext, padtext...)
 	return
@@ -26,12 +25,12 @@ func (p PKCS7Padding) Encrypt(plaintext []byte) (ciphertext []byte, err error) {
 
 func (p PKCS7Padding) Decrypt(ciphertext []byte) (plaintext []byte, err error) {
 	length := len(ciphertext)
-	if length%int(p) != 0 {
-		return nil, ErrNotBlock
+	if length == 0 {
+		return nil, ErrNotFullBlock
 	}
 	unpadding := int(ciphertext[length-1])
 	if unpadding > length {
-		return nil, ErrNotBlock
+		return nil, ErrNotFullBlock
 	}
 	plaintext = ciphertext[:length-unpadding]
 	return
@@ -46,6 +45,10 @@ func NewZeroPadding(i int) Cipher {
 var _ Cipher = (*ZeroPadding)(nil)
 
 func (p ZeroPadding) Encrypt(plaintext []byte) (ciphertext []byte, err error) {
+	length := len(plaintext)
+	if length == 0 {
+		return nil, ErrNotFullBlock
+	}
 	padding := int(p) - len(plaintext)%int(p)
 	padtext := make([]byte, padding)
 	ciphertext = append(plaintext, padtext...)
@@ -53,6 +56,10 @@ func (p ZeroPadding) Encrypt(plaintext []byte) (ciphertext []byte, err error) {
 }
 
 func (p ZeroPadding) Decrypt(ciphertext []byte) (plaintext []byte, err error) {
+	length := len(ciphertext)
+	if length == 0 {
+		return nil, ErrNotFullBlock
+	}
 	plaintext = bytes.TrimFunc(ciphertext, func(r rune) bool {
 		return r == 0
 	})

@@ -3,12 +3,8 @@ package cipher
 import (
 	"crypto/cipher"
 	"crypto/rand"
-	"errors"
 	"io"
 )
-
-// ErrCipherText malformed ciphertext
-var ErrCipherText = errors.New("cipher: malformed ciphertext")
 
 // AEAD packaging to simplify operations
 type AEAD struct {
@@ -35,7 +31,7 @@ func (a *AEAD) Encrypt(plaintext []byte) (ciphertext []byte, err error) {
 func (a *AEAD) Decrypt(ciphertext []byte) (plaintext []byte, err error) {
 	nonceSize := a.AEAD.NonceSize()
 	if len(ciphertext) < nonceSize {
-		return nil, ErrCipherText
+		return nil, ErrNotFullBlock
 	}
 	return a.AEAD.Open(nil,
 		ciphertext[:nonceSize],
